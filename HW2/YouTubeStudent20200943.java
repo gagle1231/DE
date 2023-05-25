@@ -42,9 +42,6 @@ public class YouTubeStudent20200943{
 	}
 
 	public static class YouTubeStudent20200943Mapper extends Mapper<Object, Text, Text, DoubleWritable> {
-		private PriorityQueue<Category> queue ;
-		private Comparator<Category> comp = new CategoryComparator();
-		private int topK;
 		public void map(Object key, Text value, Context context) throws IOException, 
 		       InterruptedException {
 		       //47EWHY3E5AM|MgsTheFury404|1024|Entertainment|123|111371|4.77
@@ -59,18 +56,7 @@ public class YouTubeStudent20200943{
 			       }
 		}
 
-		protected void setup(Context context) throws IOException, InterruptedException {
-			Configuration conf = context.getConfiguration();
-			topK = conf.getInt("topK", -1);
-			queue = new PriorityQueue<Category>( topK , comp);
-		}
 
-		protected void cleanup(Context context) throws IOException, InterruptedException {
-			while( queue.size() != 0 ) {
-				Category cat = (Category) queue.remove();
-				context.write( new Text( cat.getName() ), new DoubleWritable(cat.getRating()) );
-			}
-		}
 	}
 
 	public static class YouTubeStudent20200943Reducer extends Reducer<Text,DoubleWritable,Text,DoubleWritable> {
@@ -109,7 +95,7 @@ public class YouTubeStudent20200943{
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		
 		if (otherArgs.length != 3) {
-			System.err.println("Usage: YouTubeStudent20200943 <in> <out>");   System.exit(2);
+			System.err.println("Usage: YouTubeStudent20200943 <in> <out> <topK>");   System.exit(2);
 		}
 		int topK = Integer.parseInt(otherArgs[2]);
 		conf.setInt("topK", topK);
