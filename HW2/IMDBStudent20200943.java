@@ -69,6 +69,7 @@ public class IMDBStudent20200943{
 			tableName = "m";
 			movieId = sp[0];
 			String title = sp[1];
+			String genre = sp[2];
 			output_value.set(String.format("%s,%s", tableName, title));
 			
 			}else{ //input: [userid::movieid::rating::xxx
@@ -79,10 +80,9 @@ public class IMDBStudent20200943{
 			}
 			
 		output_key.set(movieId);
-		context.write(output_key, output_value);
+		if(genre.equals("Fantasy"){
+			context.write(output_key, output_value);
 		}
-		
-		
 	}
 	
 	public static class IMDBStudent20200943Reducer extends Reducer<Text,Text,Text,DoubleWritable> 
