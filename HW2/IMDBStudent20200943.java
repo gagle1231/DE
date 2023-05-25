@@ -13,15 +13,15 @@ public class IMDBStudent20200943{
 	public static class Movie{
 		String title;
 		double rating;
-		
+
 		public Movie(String title, double rating){
 			this.title = title;
 			this.rating = rating;
 		}
-		
+
 		public String getTitle(){return title;}
 		public double getRating(){return rating;}
-		
+
 	}
 	public static class MovieComparator implements Comparator<Movie> {
 		public int compare(Movie x, Movie y) {
@@ -30,18 +30,18 @@ public class IMDBStudent20200943{
 			return 0;
 		}
 	}
-	
+
 	//우선순위 큐에 넣는 작업
 	public static void insertMovie(PriorityQueue q, String title, double rating, int topK) {
-	Movie movie_head = (Movie) q.peek();
-	
-	if ( q.size() < topK || movie_head.rating < rating ){
-		Movie movie = new Movie(title, rating);
-		q.add( movie );
-		if( q.size() > topK ) q.remove();
+		Movie movie_head = (Movie) q.peek();
+
+		if ( q.size() < topK || movie_head.rating < rating ){
+			Movie movie = new Movie(title, rating);
+			q.add( movie );
+			if( q.size() > topK ) q.remove();
+		}
 	}
-	}
-	
+
 	public static class IMDBStudent20200943Mapper extends Mapper<Object, Text, Text, Text>{
 		//파일 이름으로 분류
 		boolean movieFile = true;
@@ -50,58 +50,58 @@ public class IMDBStudent20200943{
 			String filename = ((FileSplit) context.getInputSplit()).getPath().getName();
 			if ( filename.indexOf( "movies" ) != -1 ) movieFile = true;
 			else movieFile = false;
-			
+
 			Configuration conf = context.getConfiguration();
 			topK = conf.getInt("topK", -1);
 		}
-		
+
 		private Text output_key = new Text();
 		private Text output_value = new Text();
 		private int topK;
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
 		{
-		
+
 			String[] sp = value.toString().split("::");
 			String tableName;
 			String movieId; //joinKey
-			
+
 			if(movieFile){ //input: [movieid::title::genre]
-			tableName = "m";
-			movieId = sp[0];
-			String title = sp[1];
-			String genre = sp[2];
-			output_value.set(String.format("%s,%s,%s", tableName, title, genre));
-			
+				tableName = "m";
+				movieId = sp[0];
+				String title = sp[1];
+				String genre = sp[2];
+				output_value.set(String.format("%s,%s,%s", tableName, title, genre));
+
 			}else{ //input: [userid::movieid::rating::xxx
-			tableName = "d";
-			movieId = sp[1];
-			String rating = sp[2];
-			output_value.set(String.format("%s,%s", tableName, rating));
+				tableName = "d";
+				movieId = sp[1];
+				String rating = sp[2];
+				output_value.set(String.format("%s,%s", tableName, rating));
 			}
-			
-		output_key.set(movieId);
+
+			output_key.set(movieId);
 			context.write(output_key, output_value);
 		}
 	}
-	
+
 	public static class IMDBStudent20200943Reducer extends Reducer<Text,Text,Text,DoubleWritable> {
-	private PriorityQueue<Movie> queue ;
-private Comparator<Movie> comp = new MovieComparator();
-private int topK;
-	protected void setup(Context context) throws IOException, InterruptedException {
-Configuration conf = context.getConfiguration();
-topK = conf.getInt("topK", -1);
-queue = new PriorityQueue<Movie>( topK , comp);
-}
+		private PriorityQueue<Movie> queue ;
+		private Comparator<Movie> comp = new MovieComparator();
+		private int topK;
+		protected void setup(Context context) throws IOException, InterruptedException {
+			Configuration conf = context.getConfiguration();
+			topK = conf.getInt("topK", -1);
+			queue = new PriorityQueue<Movie>( topK , comp);
+		}
 
-protected void cleanup(Context context) throws IOException, InterruptedException {
-while( queue.size() != 0 ) {
-Movie movie = (Movie) queue.remove();
-context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating()) );
-}
-}
+		protected void cleanup(Context context) throws IOException, InterruptedException {
+			while( queue.size() != 0 ) {
+				Movie movie = (Movie) queue.remove();
+				context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating()) );
+			}
+		}
 
-	private Text outputKey = new Text();
+		private Text outputKey = new Text();
 		private DoubleWritable result = new DoubleWritable();
 
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException 
@@ -112,7 +112,7 @@ context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating(
 			ArrayList<String> buffer = new ArrayList<String>();
 			double avg = 0;
 			int size =0;
-			
+
 			for (Text val : values) {
 				String file_type;
 				String[] str = val.toString().split(",");
@@ -131,7 +131,7 @@ context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating(
 					}
 				}
 			}
-			       
+
 			for ( int i = 0 ; i < buffer.size(); i++ ){
 				String [] strs = buffer.get(i).split(",");
 				double d= Double.parseDouble(strs[1]);
@@ -142,9 +142,9 @@ context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating(
 				avg = avg/size;
 			reduce_key.set(title);
 			reduce_result.set(avg);
-			
+
 			if(genre.equals("Fantasy")
-				insertMovie(queue, title, avg, topK);
+					insertMovie(queue, title, avg, topK);
 		}
 	}
 
@@ -152,13 +152,13 @@ context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating(
 	{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-		
+
 		if (otherArgs.length != 3) 
 		{
 			System.err.println("Usage: IMDBStudent20200943 <in> <out> <k>");
 			System.exit(2);
 		}
-		
+
 		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
 		Job job = new Job(conf, "IMDBStudent20200943");
 		job.setJarByClass(IMDBStudent20200943.class);
