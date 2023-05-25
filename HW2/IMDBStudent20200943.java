@@ -70,7 +70,7 @@ public class IMDBStudent20200943{
 			movieId = sp[0];
 			String title = sp[1];
 			String genre = sp[2];
-			output_value.set(String.format("%s,%s", tableName, title));
+			output_value.set(String.format("%s,%s,%s", tableName, title, genre));
 			
 			}else{ //input: [userid::movieid::rating::xxx
 			tableName = "d";
@@ -80,13 +80,11 @@ public class IMDBStudent20200943{
 			}
 			
 		output_key.set(movieId);
-		if(genre.equals("Fantasy"){
 			context.write(output_key, output_value);
 		}
 	}
 	
-	public static class IMDBStudent20200943Reducer extends Reducer<Text,Text,Text,DoubleWritable> 
-	{
+	public static class IMDBStudent20200943Reducer extends Reducer<Text,Text,Text,DoubleWritable> {
 	private PriorityQueue<Movie> queue ;
 private Comparator<Movie> comp = new MovieComparator();
 private int topK;
@@ -119,9 +117,10 @@ context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating(
 				String file_type;
 				String[] str = val.toString().split(",");
 				file_type = str[0];
-				
+				String genre;
 				if( file_type.equals( "m" ) )  {
 					title = str[1];
+					genre = str[2];
 				}else{
 					if ( title.length() == 0 ) {
 						buffer.add( val.toString() );
@@ -143,7 +142,9 @@ context.write( new Text( movie.getTitle() ), new DoubleWritable(movie.getRating(
 				avg = avg/size;
 			reduce_key.set(title);
 			reduce_result.set(avg);
-			insertMovie(queue, title, avg, topK);
+			
+			if(genre.equals("Fantasy")
+				insertMovie(queue, title, avg, topK);
 		}
 	}
 
