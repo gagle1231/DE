@@ -60,7 +60,7 @@ public class IMDBStudent20200943{
 		private int topK;
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
 		{
-
+			
 			String[] sp = value.toString().split("::");
 			String tableName;
 			String movieId; //joinKey
@@ -70,13 +70,13 @@ public class IMDBStudent20200943{
 				movieId = sp[0];
 				String title = sp[1];
 				String genre = sp[2];
-				output_value.set(String.format("%s,%s,%s", tableName, title, genre));
+				output_value.set(String.format("%s::%s::%s", tableName, title, genre));
 
 			}else{ //input: [userid::movieid::rating::xxx
 				tableName = "d";
 				movieId = sp[1];
 				String rating = sp[2];
-				output_value.set(String.format("%s,%s", tableName, rating));
+				output_value.set(String.format("%s::%s", tableName, rating));
 			}
 
 			output_key.set(movieId);
@@ -113,11 +113,12 @@ public class IMDBStudent20200943{
 			double avg = 0;
 			int size =0;
 
+			String genre ="";
 			for (Text val : values) {
 				String file_type;
-				String[] str = val.toString().split(",");
+				String[] str = val.toString().split("::");
 				file_type = str[0];
-				String genre;
+				
 				if( file_type.equals( "m" ) )  {
 					title = str[1];
 					genre = str[2];
@@ -133,17 +134,23 @@ public class IMDBStudent20200943{
 			}
 
 			for ( int i = 0 ; i < buffer.size(); i++ ){
-				String [] strs = buffer.get(i).split(",");
+				String [] strs = buffer.get(i).split("::");
 				double d= Double.parseDouble(strs[1]);
 				avg+=d;
 				size++;
 			}
 			if(size !=0)
 				avg = avg/size;
+				avg = Math.round(avg*10)/10.0;
+			
 			reduce_key.set(title);
 			reduce_result.set(avg);
 
-			if(genre.equals("Fantasy")
+<<<<<<< HEAD
+			if(genre.contains("Fantasy"))
+=======
+			if(genre.equals("Fantasy"))
+>>>>>>> 06c88a308ad6dbd98fbd554b4993c03180d8945b
 					insertMovie(queue, title, avg, topK);
 		}
 	}
