@@ -22,9 +22,6 @@ public class YouTubeStudent20200943{
 		
 		public String getName(){return name;}
 		public double getRating(){return rating;}
-		public String getString(){
-			return name+" "+rating;
-		}
 		
 	}
 	
@@ -63,7 +60,7 @@ public class YouTubeStudent20200943{
 
 	}
 
-	public static class YouTubeStudent20200943Reducer extends Reducer<Text,DoubleWritable,Text,NullWritable> {
+	public static class YouTubeStudent20200943Reducer extends Reducer<Text,DoubleWritable,Text,DoubleWritable> {
 			private PriorityQueue<Category> queue ;
 			private Comparator<Category> comp = new CategoryComparator();
 			private int topK;
@@ -86,14 +83,16 @@ public class YouTubeStudent20200943{
 				topK = conf.getInt("topK", -1);
 				queue = new PriorityQueue<Category>( topK , comp);
 			}
+		
 			protected void cleanup(Context context) throws IOException, InterruptedException {
 				while( queue.size() != 0 ) {
 					Category cat = (Category) queue.remove();
-					context.write( new Text( cat.getString() ), new NullWritable.get() );
+					context.write( new Text( cat.getName() ), new DoubleWritable(cat.getRating()));
 				}
 			}
 
 		}
+	
 	public static void main(String[] args) throws Exception{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
@@ -108,7 +107,7 @@ public class YouTubeStudent20200943{
 		job.setMapperClass(YouTubeStudent20200943Mapper.class);
 		job.setReducerClass(YouTubeStudent20200943Reducer.class);
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(NullWritable.class);
+		job.setOutputValueClass(DoubleWritable.class);
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 		FileSystem.get(job.getConfiguration()).delete( new Path(otherArgs[1]), true);
