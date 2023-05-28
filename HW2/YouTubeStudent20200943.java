@@ -50,11 +50,14 @@ public class YouTubeStudent20200943{
 			       String cat_list = str[3];
 			       String rating = str[6];
 			       
-			       StringTokenizer st = new StringTokenizer(cat_list, " & ");
+			       /*StringTokenizer st = new StringTokenizer(cat_list, " & ");
 			       while(st.hasMoreTokens()){
 			       	String cat_name = st.nextToken();
 			       	context.write( new Text( cat_name ), new DoubleWritable(Double.parseDouble(rating)) ); 
-			       }
+			       }*/
+
+context.write( new Text( cat_list ), new DoubleWritable(Double.parseDouble(rating)) );
+
 		}
 
 
