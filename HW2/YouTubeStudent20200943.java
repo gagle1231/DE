@@ -24,6 +24,7 @@ public class YouTubeStudent20200943{
 		public double getRating(){return rating;}
 		
 	}
+	
 	public static class CategoryComparator implements Comparator<Category> {
 		public int compare(Category x, Category y) {
 			if ( x.rating > y.rating ) return 1;
@@ -49,11 +50,14 @@ public class YouTubeStudent20200943{
 			       String cat_list = str[3];
 			       String rating = str[6];
 			       
-			       StringTokenizer st = new StringTokenizer(cat_list, " & ");
+			       /*StringTokenizer st = new StringTokenizer(cat_list, " & ");
 			       while(st.hasMoreTokens()){
 			       	String cat_name = st.nextToken();
 			       	context.write( new Text( cat_name ), new DoubleWritable(Double.parseDouble(rating)) ); 
-			       }
+			       }*/
+
+context.write( new Text( cat_list ), new DoubleWritable(Double.parseDouble(rating)) );
+
 		}
 
 
@@ -82,14 +86,16 @@ public class YouTubeStudent20200943{
 				topK = conf.getInt("topK", -1);
 				queue = new PriorityQueue<Category>( topK , comp);
 			}
+		
 			protected void cleanup(Context context) throws IOException, InterruptedException {
 				while( queue.size() != 0 ) {
 					Category cat = (Category) queue.remove();
-					context.write( new Text( cat.getName() ), new DoubleWritable(cat.getRating()) );
+					context.write( new Text( cat.getName() ), new DoubleWritable(cat.getRating()));
 				}
 			}
 
 		}
+	
 	public static void main(String[] args) throws Exception{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
